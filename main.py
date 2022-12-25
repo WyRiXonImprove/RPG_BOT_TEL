@@ -26,13 +26,14 @@ inl_button_skipetr = InlineKeyboardButton(text="Маг",
                                             callback_data="skipetr")
 inl_button_weapon.add(inl_button_sword, inl_button_bow, inl_button_skipetr)
 """________________________________________________________________________________"""
-##
+
+
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
 
 
 async def on_start_up(_):
-    print("Бот запущен успешно")
+    print("Бот запущен успешно!")
 
 @dp.message_handler(commands=["start"])
 async def start_message(message: types.Message):
@@ -82,15 +83,55 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                            reply_markup=inl_button_weapon)
 
 
+"""____________________инлайн кнопки для выбора оружия________________"""
 
+weapon_count = 0
 @dp.callback_query_handler(lambda c: c.data == 'sword')
 async def add_class_for_user(callback_query: types.CallbackQuery):
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id,
-                           text=start_farm.format("Меч"),
-                           parse_mode="HTML")
+    global weapon_count
+    if weapon_count == 0:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                                   text=start_farm.format("Меч"),
+                                   parse_mode="HTML")
+        weapon_count += 1
+    else:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                               text="<b>Вы уже брали оружие!</b>",
+                               parse_mode="HTML")
 
+@dp.callback_query_handler(lambda c: c.data == 'bow')
+async def add_class_for_user(callback_query: types.CallbackQuery):
+    global weapon_count
+    if weapon_count == 0:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                                   text=start_farm.format("Лук"),
+                                   parse_mode="HTML")
+        weapon_count += 1
+    else:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                               text="<b>Вы уже брали оружие!</b>",
+                               parse_mode="HTML")
 
+@dp.callback_query_handler(lambda c: c.data == 'skipetr')
+async def add_class_for_user(callback_query: types.CallbackQuery):
+    global weapon_count
+    if weapon_count == 0:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                                   text=start_farm.format("Магический Скипетр"),
+                                   parse_mode="HTML")
+        weapon_count += 1
+    else:
+        await bot.answer_callback_query(callback_query.id)
+        await bot.send_message(callback_query.from_user.id,
+                               text="<b>Вы уже брали оружие!</b>",
+                               parse_mode="HTML")
+
+"""___________________________________________________________________"""
 
 
 if __name__ == "__main__":
