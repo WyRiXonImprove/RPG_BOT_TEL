@@ -32,7 +32,7 @@ dp = Dispatcher(bot)
 
 
 async def on_start_up(_):
-    print("Бот запущен успешно!")
+    print("Бот запущен успешно")
 
 @dp.message_handler(commands=["start"])
 async def start_message(message: types.Message):
