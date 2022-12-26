@@ -18,6 +18,10 @@ async def new_db():
                     user_id  INT,
                     class TEXT,
                     weapon TEXT);""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS level(
+                        user_id  INT,
+                        ex_level REAL,
+                        ex REAL);""")
     db.commit()
 
 async def add_values_new_db(user_id):
@@ -33,50 +37,39 @@ async def add_values_new_db(user_id):
 
 
 # функция проверки бд
-# def prov():
-#     db = sq.connect("new db1")
-#     cur = db.cursor()
-#     for i in cur.execute("""SELECT * FROM user_db"""):
-#         print(i)
+def prov2():
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute("""SELECT * FROM user_db"""):
+        print(i)
 
 
 """_____________________________________апдейт классов_________________________________"""
 
 """_____________________________Создание бд для фaрма и ее функций__________________________"""
 
-
-async def db_lev():
-    global db, cur
-    db_l = sq.connect('level.db')
-    cur_l = db_l.cursor()
-
-    cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
-                    user_id  INT,
-                    ex_level REAL,
-                    ex REAL);""")
-    db_l.commit()
-
-
 async def add_values_level_db(user_id):
-    db_l = sq.connect('level.db')
-    cur_l = db_l.cursor()
-    cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
-    if cur_l.fetchone() is None:
+    db = sq.connect('new db1')
+    cur = db.cursor()
+    cur.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
+    if cur.fetchone() is None:
         user_info = (user_id, 1.0, 50.0)
-        cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
-        db_l.commit()
+        cur.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
+        db.commit()
         # for i in cur_l.execute("""SELECT * FROM level"""):
         #     # print(i)
 
 
 #функция проверки бд
 def prov():
-    db_l = sq.connect('level.db')
-    cur_l = db_l.cursor()
-    for i in cur_l.execute("""SELECT * FROM level"""):
+    db = sq.connect('new db1')
+    cur = db.cursor()
+    for i in cur.execute("""SELECT * FROM level"""):
         print(i)
     global ex
-    ex = cur_l.execute("""SELECT ex FROM level""")
+    ex = cur.execute("""SELECT ex FROM level""")
+
+
 
 """_____________________________________апдейт классов_________________________________"""
 
@@ -199,9 +192,11 @@ async def start_message(message: types.Message):
                            text=welcome,
                            parse_mode="HTML",
                            reply_markup=kb)
-    await db_lev()
+    await new_db()
     await add_values_level_db(user_id=message.from_user.id)
+    await add_values_new_db(user_id=message.from_user.id)
     prov()
+    prov2()
     await message.delete()
 
 
