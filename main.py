@@ -1,4 +1,3 @@
-import time
 from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import sqlite3 as sq
@@ -74,6 +73,17 @@ inl_button_weapon.add(inl_button_sword, inl_button_bow, inl_button_skipetr)
 """________________________________________________________________________________"""
 
 
+"""_______________________________________клава ___________________________________"""
+b_help = KeyboardButton('/help')
+b_game = KeyboardButton('/game')
+b_buy = KeyboardButton('/buy')
+b_farm = KeyboardButton('/farm')
+
+kb = ReplyKeyboardMarkup(resize_keyboard=True)
+kb.add(b_help).insert(b_game).add(b_buy).insert(b_farm)
+"""________________________________________________________________________________"""
+
+
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
 
@@ -85,7 +95,8 @@ async def on_start_up(_):
 async def start_message(message: types.Message):
     await bot.send_message(chat_id=message.from_user.id,
                            text=welcome,
-                           parse_mode="HTML")
+                           parse_mode="HTML",
+                           reply_markup=kb)
     await new_db()
     await add_values_new_db(user_id=message.from_user.id)
     await message.delete()
@@ -121,20 +132,47 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    await bot.send_message(chat_id=message.from_user.id,
-                           text="Фарм площади составляет: <b>20 секунд!</b>",
-                           parse_mode="HTML")
-    time.sleep(20)
+    upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
+    await asyncio.sleep(1)
+    sym = '▌'
+    x = 10
+    d = []
+    for i in range(10):
+        d.append(sym * 1)
+        x += 10
+        await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+        await asyncio.sleep(0.1)
+    await asyncio.sleep(0.2)
+    await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
+    await asyncio.sleep(0.5)
+    await upload_message.delete()
+
+    upload_message = await bot.send_message(chat_id=message.chat.id,
+                                            text="Фарм площади составляет: <b>20 секунд!</b>",
+                                            parse_mode="HTML")
+    await asyncio.sleep(1)
+    sym = '▌'
+    x = 10
+    d = []
+    for i in range(10):
+        d.append(sym * 1)
+        x += 10
+        await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+        await asyncio.sleep(0.1)
+    await asyncio.sleep(0.2)
     await bot.send_message(chat_id=message.from_user.id,
                            text=XP_ADD,
                            parse_mode="HTML")
+    await asyncio.sleep(0.5)
+    # await asyncio.sleep(20)
+
 
 
 
 """______________________выбор класса для пользователя_______________"""
 @dp.callback_query_handler(lambda c: c.data == 'white_elf')
 async def add_class_for_user(callback_query: types.CallbackQuery):
-    for i in cur.execute("""SELECT""")
+    # for i in cur.execute("""SELECT""")
     await update_class_white_elf(user_id=callback_query.from_user.id)
     await bot.send_message(callback_query.from_user.id,
                            text=vibor_weapon.format("Светлых эльфов"),
@@ -208,6 +246,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
                                parse_mode="HTML")
+
 
 """___________________________________________________________________"""
 
