@@ -53,7 +53,7 @@ async def add_values_level_db(user_id):
     cur = db.cursor()
     cur.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
     if cur.fetchone() is None:
-        user_info = (user_id, 1.0, 50.0)
+        user_info = (user_id, 0, 0)
         cur.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
         db.commit()
         # for i in cur_l.execute("""SELECT * FROM level"""):
