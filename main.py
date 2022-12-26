@@ -18,6 +18,8 @@ async def new_db():
     db.commit()
 
 async def add_values_new_db(user_id):
+    db = sq.connect("new db1")
+    cur = db.cursor()
     cur.execute(f"""SELECT user_id FROM user_db WHERE user_id = '{user_id}'""")
     if cur.fetchone() is None:
         user_info = (user_id, "", "")
@@ -58,25 +60,46 @@ async def update_class_knights(user_id):
 async def update_weapon_sword(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
-    cur.execute(f"""UPDATE user_db SET weapon = '{sword}' WHERE user_id = '{user_id}'""")
+    cur.execute(f"""UPDATE user_db SET weapon = '{"sword"}' WHERE user_id = '{user_id}'""")
     db.commit()
 
 async def update_weapon_bow(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
-    cur.execute(f"""UPDATE user_db SET weapon = {bow} WHERE user_id = '{user_id}'""")
+    cur.execute(f"""UPDATE user_db SET weapon = {"bow"} WHERE user_id = '{user_id}'""")
     db.commit()
 
 async def update_weapon_skipetr(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
-    cur.execute(f"""UPDATE user_db SET weapon = {skipetr} WHERE user_id = '{user_id}'""")
+    cur.execute(f"""UPDATE user_db SET weapon = {"skipetr"} WHERE user_id = '{user_id}'""")
     db.commit()
-
-
-
-
 """________________________________________________________________________________"""
+"""_________________________создание бд с личными знач. пользователя_______________"""
+async def db_farm():
+    global db_table_farm, cur_table_farm
+    db_table_farm = sq.connect("db from farm")
+    cur_table_farm = db_table_farm.cursor()
+
+    cur_table_farm.execute("""CREATE TABLE IF NOT EXISTS user_farm(
+                        user_id  INT,
+                        speed_farm INT,
+                        mana INT,
+                        time_farm INT,
+                        mana_all INT);""")
+    db_table_farm.commit()
+
+async def add_values_farm(user_id):
+    db_table_farm = sq.connect("db from farm")
+    cur_table_farm = db_table_farm.cursor()
+    cur_table_farm.execute(f"""SELECT user_id FROM user_farm WHERE user_id = '{user_id}'""")
+    if cur_table_farm.fetchone() is None:
+        user_info = (user_id, 100, 300, 60, 300)
+        cur_table_farm.execute("""INSERT INTO user_farm VALUES(?, ?, ?, ?, ?)""", user_info)
+        db_table_farm.commit()
+        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
+            print(i)
+
 
 """______________________инлайн клава для выбора класса____________________________"""
 inl_button_class = InlineKeyboardMarkup(row_width=3)
@@ -150,7 +173,7 @@ async def game_start(message: types.Message):
         await asyncio.sleep(0.2)  # задаём время задежрки
     await asyncio.sleep(0.2)
     await upload_message.edit_text(text='<b>Успешно!</b>', parse_mode="HTML")
-    await asyncio.sleep(0.5)# ждём
+    await asyncio.sleep(1)# ждём
     await upload_message.delete()#удаляем сообщение
 
     await bot.send_message(chat_id=message.from_user.id,
@@ -160,6 +183,8 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
+    await db_farm()
+    await add_values_farm(user_id=message.from_user.id)
     upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
     await asyncio.sleep(1)
     sym = '▌'
@@ -175,6 +200,8 @@ async def farm_start(message: types.Message):
     await asyncio.sleep(0.5)
     await upload_message.delete()
 
+
+
     upload_message = await bot.send_message(chat_id=message.chat.id,
                                             text="Фарм площади составляет: <b>20 секунд!</b>",
                                             parse_mode="HTML")
@@ -188,11 +215,12 @@ async def farm_start(message: types.Message):
         await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
         await asyncio.sleep(0.1)
     await asyncio.sleep(0.2)
+    await upload_message.delete()
     await bot.send_message(chat_id=message.from_user.id,
                            text=XP_ADD,
                            parse_mode="HTML")
     await asyncio.sleep(0.5)
-    # await asyncio.sleep(20)
+
 
 
 
@@ -308,7 +336,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
                                parse_mode="HTML")
-
 
 """___________________________________________________________________"""
 
