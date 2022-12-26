@@ -50,6 +50,21 @@ async def help_message(message: types.Message):
 
 @dp.message_handler(commands=["game"])
 async def game_start(message: types.Message):
+    upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем загрузку...")
+    await asyncio.sleep(1)
+    sym = '▌'
+    x = 10
+    d = []
+    for i in range(10):
+        d.append(sym * 1)
+        x += 10
+        await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+        await asyncio.sleep(0.2)  # задаём время задежрки
+    await asyncio.sleep(0.2)
+    await upload_message.edit_text(text='Успешно')
+    await asyncio.sleep(0.5)# ждём
+    await upload_message.delete()#удаляем сообщение
+
     await bot.send_message(chat_id=message.from_user.id,
                            text=vibor_classa,
                            parse_mode="HTML",
