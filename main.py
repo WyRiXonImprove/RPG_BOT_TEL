@@ -46,6 +46,8 @@ async def update_class_dark_elf(user_id):
     db.commit()
 
 async def update_class_knights(user_id):
+    db = sq.connect("new db1")
+    cur = db.cursor()
     cur.execute(f"""UPDATE user_db SET class = {"Рыцарь"} WHERE user_id = '{user_id}'""")
     db.commit()
 
@@ -136,6 +138,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda c: c.data == 'knights')
 async def add_class_for_user(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
+    await update_class_knights(user_id=callback_query.from_user.id)
     await bot.send_message(callback_query.from_user.id,
                            text=vibor_weapon.format("Рыцарей"),
                            parse_mode="HTML",
