@@ -42,13 +42,13 @@ def prov():
 async def update_class_dark_elf(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
-    cur.execute(f"""UPDATE user_db SET class = {"Темный эльф"} WHERE user_id = '{user_id}'""")
+    cur.execute(f"""UPDATE user_db SET class = {dark_elf} WHERE user_id = '{user_id}'""")
     db.commit()
 
 async def update_class_knights(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
-    cur.execute(f"""UPDATE user_db SET class = {"Рыцарь"} WHERE user_id = '{user_id}'""")
+    cur.execute(f"""UPDATE user_db SET class = {knights} WHERE user_id = '{user_id}'""")
     db.commit()
 
 """______________________инлайн клава для выбора класса____________________________"""
@@ -79,7 +79,7 @@ dp = Dispatcher(bot)
 
 async def on_start_up(_):
     print("Бот запущен!")
-    prov()
+
 
 @dp.message_handler(commands=["start"])
 async def start_message(message: types.Message):
@@ -110,7 +110,7 @@ async def game_start(message: types.Message):
         await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
         await asyncio.sleep(0.2)  # задаём время задежрки
     await asyncio.sleep(0.2)
-    await upload_message.edit_text(text='Успешно')
+    await upload_message.edit_text(text='<b>Успешно!</b>', parse_mode="HTML")
     await asyncio.sleep(0.5)# ждём
     await upload_message.delete()#удаляем сообщение
 
@@ -134,6 +134,7 @@ async def farm_start(message: types.Message):
 """______________________выбор класса для пользователя_______________"""
 @dp.callback_query_handler(lambda c: c.data == 'white_elf')
 async def add_class_for_user(callback_query: types.CallbackQuery):
+    for i in cur.execute("""SELECT""")
     await update_class_white_elf(user_id=callback_query.from_user.id)
     await bot.send_message(callback_query.from_user.id,
                            text=vibor_weapon.format("Светлых эльфов"),
@@ -154,7 +155,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 async def add_class_for_user(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await update_class_knights(user_id=callback_query.from_user.id)
-    await bot.send_message(callback_query.from_user.id,
+    await bot.send_message(callback_query.from_user .id,
                            text=vibor_weapon.format("Рыцарей"),
                            parse_mode="HTML",
                            reply_markup=inl_button_weapon)
