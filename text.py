@@ -59,3 +59,6 @@ XP_ADD = """Добавлено: {}XP
 white_elf = "white_elf"
 dark_elf = "dark_elf"
 knights = "knights"
+sword = "sword"
+bow = "bow"
+skipetr = "skipetr"
