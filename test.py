@@ -1,10 +1,9 @@
 from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import sqlite3 as sq
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, \
+    InlineKeyboardMarkup
 from text import *
-
-ex = 0
 
 """_____________________________Создание бд и ее функций__________________________"""
 
@@ -20,9 +19,8 @@ async def new_db():
                     weapon TEXT);""")
     db.commit()
 
+
 async def add_values_new_db(user_id):
-    db = sq.connect("new db1")
-    cur = db.cursor()
     cur.execute(f"""SELECT user_id FROM user_db WHERE user_id = '{user_id}'""")
     if cur.fetchone() is None:
         user_info = (user_id, "", "")
@@ -33,11 +31,11 @@ async def add_values_new_db(user_id):
 
 
 # функция проверки бд
-# def prov():
-#     db = sq.connect("new db1")
-#     cur = db.cursor()
-#     for i in cur.execute("""SELECT * FROM user_db"""):
-#         print(i)
+def prov():
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute("""SELECT * FROM user_db"""):
+        print(i)
 
 
 """_____________________________________апдейт классов_________________________________"""
@@ -61,24 +59,24 @@ async def add_values_level_db(user_id):
     db_l = sq.connect('level.db')
     cur_l = db_l.cursor()
     cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
-    if cur_l.fetchone() is None:
-        user_info = (user_id, 1.0, 50.0)
-        cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
+    if cur.fetchone() is None:
+        user_info = (user_id, "", "")
+        cur.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
         db_l.commit()
-        # for i in cur_l.execute("""SELECT * FROM level"""):
-        #     # print(i)
+        for i in cur.execute("""SELECT * FROM level"""):
+            print(i)
 
 
-#функция проверки бд
+# функция проверки бд
 def prov():
     db_l = sq.connect('level.db')
     cur_l = db_l.cursor()
     for i in cur_l.execute("""SELECT * FROM level"""):
         print(i)
-    global ex
-    ex = cur_l.execute("""SELECT ex FROM level""")
+
 
 """_____________________________________апдейт классов_________________________________"""
+
 
 async def update_class_white_elf(user_id):
     db = sq.connect("new db1")
@@ -86,11 +84,13 @@ async def update_class_white_elf(user_id):
     cur.execute(f"""UPDATE user_db SET class = '{white_elf}' WHERE user_id = '{user_id}'""")
     db.commit()
 
+
 async def update_class_dark_elf(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
     cur.execute(f"""UPDATE user_db SET class = {dark_elf} WHERE user_id = '{user_id}'""")
     db.commit()
+
 
 async def update_class_knights(user_id):
     db = sq.connect("new db1")
@@ -125,31 +125,6 @@ async def update_weapon_skipetr(user_id):
 
 
 """________________________________________________________________________________"""
-"""_________________________создание бд с личными знач. пользователя_______________"""
-async def db_farm():
-    global db_table_farm, cur_table_farm
-    db_table_farm = sq.connect("db from farm")
-    cur_table_farm = db_table_farm.cursor()
-
-    cur_table_farm.execute("""CREATE TABLE IF NOT EXISTS user_farm(
-                        user_id  INT,
-                        speed_farm INT,
-                        mana INT,
-                        time_farm INT,
-                        mana_all INT);""")
-    db_table_farm.commit()
-
-async def add_values_farm(user_id):
-    db_table_farm = sq.connect("db from farm")
-    cur_table_farm = db_table_farm.cursor()
-    cur_table_farm.execute(f"""SELECT user_id FROM user_farm WHERE user_id = '{user_id}'""")
-    if cur_table_farm.fetchone() is None:
-        user_info = (user_id, 100, 300, 60, 300)
-        cur_table_farm.execute("""INSERT INTO user_farm VALUES(?, ?, ?, ?, ?)""", user_info)
-        db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
-
 
 """______________________инлайн клава для выбора класса____________________________"""
 inl_button_class = InlineKeyboardMarkup(row_width=3)
@@ -173,7 +148,6 @@ inl_button_skipetr = InlineKeyboardButton(text="Маг",
 inl_button_weapon.add(inl_button_sword, inl_button_bow, inl_button_skipetr)
 """________________________________________________________________________________"""
 
-
 """_______________________________________клава ___________________________________"""
 b_help = KeyboardButton('/help')
 b_game = KeyboardButton('/game')
@@ -183,7 +157,6 @@ b_farm = KeyboardButton('/farm')
 kb = ReplyKeyboardMarkup(resize_keyboard=True)
 kb.add(b_help).insert(b_game).add(b_buy).insert(b_farm)
 """________________________________________________________________________________"""
-
 
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
@@ -199,9 +172,9 @@ async def start_message(message: types.Message):
                            text=welcome,
                            parse_mode="HTML",
                            reply_markup=kb)
+    prov()
     await db_lev()
     await add_values_level_db(user_id=message.from_user.id)
-    prov()
     await message.delete()
 
 
@@ -226,18 +199,17 @@ async def game_start(message: types.Message):
         await asyncio.sleep(0.2)  # задаём время задежрки
     await asyncio.sleep(0.2)
     await upload_message.edit_text(text='<b>Успешно!</b>', parse_mode="HTML")
-    await asyncio.sleep(1)# ждём
-    await upload_message.delete()#удаляем сообщение
+    await asyncio.sleep(0.5)  # ждём
+    await upload_message.delete()  # удаляем сообщение
 
     await bot.send_message(chat_id=message.from_user.id,
                            text=vibor_classa,
                            parse_mode="HTML",
                            reply_markup=inl_button_class)
 
+
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    await db_farm()
-    await add_values_farm(user_id=message.from_user.id)
     upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
     await asyncio.sleep(1)
     sym = '▌'
@@ -253,8 +225,6 @@ async def farm_start(message: types.Message):
     await asyncio.sleep(0.5)
     await upload_message.delete()
 
-
-
     upload_message = await bot.send_message(chat_id=message.chat.id,
                                             text="Фарм площади составляет: <b>20 секунд!</b>",
                                             parse_mode="HTML")
@@ -268,15 +238,16 @@ async def farm_start(message: types.Message):
         await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
         await asyncio.sleep(0.1)
     await asyncio.sleep(0.2)
-    await upload_message.delete()
     await bot.send_message(chat_id=message.from_user.id,
-                           text='Добавлено: ' + '0' +' XP\n' 'Всего: ' + str(ex) + '/' + '0' + ' XP',
+                           text=XP_ADD,
                            parse_mode="HTML")
     await asyncio.sleep(0.5)
-
+    # await asyncio.sleep(20)
 
 
 """______________________выбор класса для пользователя_______________"""
+
+
 @dp.callback_query_handler(lambda c: c.data == 'white_elf')
 async def add_class_for_user(callback_query: types.CallbackQuery):
     # for i in cur.execute("""SELECT""")
@@ -353,8 +324,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     if check_weapon == "":
         await update_weapon_sword(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
-                                    text=start_farm.format("Меч"),
-                                    parse_mode="HTML")
+                               text=start_farm.format("Меч"),
+                               parse_mode="HTML")
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -370,8 +341,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     if check_weapon == "":
         await update_weapon_bow(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
-                                   text=start_farm.format("Лук"),
-                                   parse_mode="HTML")
+                               text=start_farm.format("Лук"),
+                               parse_mode="HTML")
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -387,8 +358,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     if check_weapon == "":
         await update_weapon_skipetr(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
-                                   text=start_farm.format("Магический Скипетр"),
-                                   parse_mode="HTML")
+                               text=start_farm.format("Магический Скипетр"),
+                               parse_mode="HTML")
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -396,7 +367,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 
 
 """___________________________________________________________________"""
-
 
 if __name__ == "__main__":
     executor.start_polling(dp, on_startup=on_start_up, skip_updates=True)
