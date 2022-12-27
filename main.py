@@ -77,8 +77,8 @@ async def update_weapon_skipetr(user_id):
 """_________________________создание бд с личными знач. пользователя_______________"""
 async def db_farm(user_id):
     global db_table_farm, cur_table_farm
-    db_table_farm = sq.connect("db from farm")
-    cur_table_farm = db_table_farm.cursor()
+    db = sq.connect("new db1")
+    cur_table_farm = db.cursor()
 
     cur_table_farm.execute("""CREATE TABLE IF NOT EXISTS user_farm(
                         user_id  INT,
@@ -86,12 +86,12 @@ async def db_farm(user_id):
                         mana INT,
                         time_farm INT,
                         mana_all INT);""")
-    db_table_farm.commit()
+    db.commit()
     cur_table_farm.execute(f"""SELECT user_id FROM user_farm WHERE user_id = '{user_id}'""")
     if cur_table_farm.fetchone() is None:
         user_info = (user_id, 100, 300, 60, 300)
         cur_table_farm.execute("""INSERT INTO user_farm VALUES(?, ?, ?, ?, ?)""", user_info)
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
 
@@ -103,28 +103,28 @@ async def db_farm(user_id):
 
 
 async def db_lev(user_id):
-    global db_l, cur_l
-    db_l = sq.connect('level.db')
-    cur_l = db_l.cursor()
+    global db, cur_l
+    db = sq.connect("new db1")
+    cur_l = db.cursor()
 
     cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
                     user_id  INT,
                     ex_level REAL,
                     ex REAL);""")
-    db_l.commit()
+    db.commit()
     cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
     if cur_l.fetchone() is None:
         user_info = (user_id, 25, 0)
         cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
-        db_l.commit()
+        db.commit()
         for i in cur_l.execute("""SELECT * FROM level"""):
             print(i)
 
 # add xp in table level
 async def xp_add(user_id):
     global XP, XP_level
-    db_l = sq.connect('level.db')
-    cur_l = db_l.cursor()
+    db = sq.connect("new db1")
+    cur_l = db.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         XP_level = i[0]
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = '{user_id}'"""):
@@ -134,30 +134,21 @@ async def xp_add(user_id):
     XP += 0.2
     XP = round(XP, 1)
     cur_l.execute(f"""UPDATE level SET ex = {XP} WHERE user_id = '{user_id}'""")
-    db_l.commit()
+    db.commit()
 
 
-async def mana_update(user_id):
-    db_table_farm = sq.connect("db from farm")
-    cur_table_farm = db_table_farm.cursor()
-    for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = {user_id}"""):
-        mana_now = i[0]
+
+
+async def mana_update(mana_now, user_id):
+    mana_now -= 5
     db = sq.connect("new db1")
-    cur = db.cursor()
-    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
-        level = i[0]
-    if level == 1:
-        if mana_now >= 5:
-            mana_now -= 5
-            cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{0}' WHERE user_id = {user_id}""")
-            db_table_farm.commit()
-            await bot.send_message(chat_id=user_id,
-                                   text=f"""<em>Потрачено <b>5 маны!</b>
-                                            Остаток: <b>{mana_now}</b></em>""",
-                                   parse_mode="HTML")
-        else:
-            await bot.send_message(chat_id=user_id,
-                                   text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
+    cur_table_farm = db.cursor()
+    cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{mana_now}' WHERE user_id = {user_id}""")
+    db.commit()
+    await bot.send_message(chat_id=user_id,
+                           text=f"""<em>Потрачено <b>5 маны!</b>
+                                     Остаток: <b>{mana_now}</b></em>""",
+                            parse_mode="HTML")
 
 
 
@@ -247,48 +238,63 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    await mana_update(user_id=message.from_user.id)
-    upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
-    await asyncio.sleep(1)
-    sym = '▌'
-    x = 10
-    d = []
-    for i in range(10):
-        d.append(sym * 1)
-        x += 10
-        await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-        await asyncio.sleep(0.1)
-    await asyncio.sleep(0.2)
-    await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
-    await asyncio.sleep(0.5)
-    await upload_message.delete()
-    db_table_farm = sq.connect("db from farm")
-    cur_table_farm = db_table_farm.cursor()
-    for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
-        speed_farm_user = i[0]
-    for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
-        time_farm_user = i[0]
-    time_farm = time_farm_user-(speed_farm_user/10)
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
+        level = i[0]
+    if level == 1:
+        db = sq.connect("new db1")
+        cur_table_farm = db.cursor()
+        for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = {message.from_user.id}"""):
+            mana_now = i[0]
+        if mana_now >= 5:
+            await mana_update(mana_now, user_id=message.from_user.id)
+            upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
+            await asyncio.sleep(1)
+            sym = '▌'
+            x = 10
+            d = []
+            for i in range(10):
+                d.append(sym * 1)
+                x += 10
+                await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+                await asyncio.sleep(0.1)
+            await asyncio.sleep(0.2)
+            await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
+            await asyncio.sleep(0.5)
+            await upload_message.delete()
+            cur_table_farm = db.cursor()
+            for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
+                speed_farm_user = i[0]
+            for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
+                time_farm_user = i[0]
+            time_farm = time_farm_user-(speed_farm_user/10)
 
-    upload_message = await bot.send_message(chat_id=message.chat.id,
-                                            text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
-                                            parse_mode="HTML")
-    await asyncio.sleep(2)
-    sym = '▌'
-    x = 0
-    d = []
-    for i in range(9):
-        d.append(sym * 1)
-        x += 10
-        await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-        await asyncio.sleep(time_farm/10)
-    await asyncio.sleep(0.5)
-    await upload_message.delete()
-    await xp_add(user_id=message.from_user.id)
-    await bot.send_message(chat_id=message.from_user.id,
-                           text=XP_ADD.format(0.2, XP, XP_level),
-                           parse_mode="HTML")
-    await asyncio.sleep(0.5)
+            upload_message = await bot.send_message(chat_id=message.chat.id,
+                                                    text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
+                                                    parse_mode="HTML")
+            await asyncio.sleep(2)
+            sym = '▌'
+            x = 0
+            d = []
+            for i in range(9):
+                d.append(sym * 1)
+                x += 10
+                await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+                await asyncio.sleep(time_farm/10)
+            await asyncio.sleep(0.5)
+            await upload_message.delete()
+            await xp_add(user_id=message.from_user.id)
+            await bot.send_message(chat_id=message.from_user.id,
+                                   text=XP_ADD.format(0.2, XP, XP_level),
+                                   parse_mode="HTML")
+            await asyncio.sleep(0.5)
+
+        else:
+            await bot.send_message(chat_id=message.from_user.id,
+                                text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
+
+
 
 
 
@@ -309,12 +315,11 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Светлых эльфов"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
         cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = {speed_farm + 40} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -335,8 +340,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Темных эльфов'"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        db = sq.connect("new db1")
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
@@ -349,7 +354,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm-10} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 10} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -370,8 +375,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Рыцарей"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        db = sq.connect("new db1")
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
@@ -384,7 +389,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm-15} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 15} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -407,12 +412,12 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                     text=start_farm.format("Меч"),
                                     parse_mode="HTML")
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        db = sq.connect("new db1")
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
         cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = {speed_farm + 10} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -431,8 +436,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                    text=start_farm.format("Лук"),
                                    parse_mode="HTML")
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        db = sq.connect("new db1")
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
@@ -443,7 +448,9 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET speed_farm = {speed_farm + 20} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana_all = {mana_farm - 5} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        cur_table_farm.execute(
+            f"""UPDATE user_farm SET mana = {mana_farm - 5} WHERE user_id = '{callback_query.from_user.id}'""")
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -462,14 +469,13 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                    text=start_farm.format("Магический Скипетр"),
                                    parse_mode="HTML")
-        db_table_farm = sq.connect("db from farm")
-        cur_table_farm = db_table_farm.cursor()
+        cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT mana_all FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             mana_farm = i[0]
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana_all = {mana_farm + 10} WHERE user_id = '{callback_query.from_user.id}'""")
-        db_table_farm.commit()
+        db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
