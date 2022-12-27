@@ -111,7 +111,7 @@ async def db_farm(user_id):
 async def db_lev(user_id):
     global db_l, cur_l
     db_l = sq.connect("table level")
-    cur_l = db.cursor()
+    cur_l = db_l.cursor()
 
     cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
                     user_id  INT,
@@ -129,7 +129,7 @@ async def db_lev(user_id):
 # add xp in table level
 async def xp_add(user_id):
     global XP, XP_level
-    db_l = sq.connect("new db1")
+    db_l = sq.connect("table level")
     cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         XP_level = i[0]
@@ -163,7 +163,7 @@ async def up_level(user_id):
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
         level = i[0]
     db_l = sq.connect("table level")
-    cur_l = db.cursor()
+    cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = {user_id}"""):
         ex = i[0]
         print(ex)
@@ -267,12 +267,12 @@ async def game_start(message: types.Message):
 async def farm_start(message: types.Message):
     db = sq.connect("new db1")
     cur = db.cursor()
-    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
         level = i[0]
     if level >= 1:
         db_table_farm = sq.connect("table farm")
         cur_table_farm = db_table_farm.cursor()
-        for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = {message.from_user.id}"""):
+        for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
             mana_now = i[0]
         if mana_now >= 5:
             await mana_update(mana_now, user_id=message.from_user.id)
@@ -361,6 +361,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
     if check_class == "":
+        db.close()
         await update_class_dark_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=vibor_weapon.format("Темных эльфов'"),
@@ -396,12 +397,13 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
     if check_class == "":
+        db.close()
         await update_class_knights(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user .id,
                                text=vibor_weapon.format("Рыцарей"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db_table_farm = sq.connect("new db1")
+        db_table_farm = sq.connect("table farm")
         cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
