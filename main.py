@@ -3,8 +3,14 @@ import asyncio
 import sqlite3 as sq
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from text import *
+import time
 
-
+if time.strftime("%X") >= '07:00:00' and time.strftime('%X') <= '10:00:00':
+    welcome = welcome_morning
+elif time.strftime("%X") >= '10:00:00' and time.strftime('%X') <= '17:00:00':
+    welcome = welcome_day
+elif time.strftime("%X") >= '17:00:00':
+    welcome = welcome_dinner
 """_____________________________Создание бд и ее функций__________________________"""
 async def new_db(user_id):
     global db, cur
@@ -114,7 +120,7 @@ async def db_lev(user_id):
     db.commit()
     cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
     if cur_l.fetchone() is None:
-        user_info = (user_id, 25, 0)
+        user_info = (user_id, 25, 24.6)
         cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
         db.commit()
         for i in cur_l.execute("""SELECT * FROM level"""):
@@ -151,8 +157,28 @@ async def mana_update(mana_now, user_id):
                             parse_mode="HTML")
 
 
-
-
+async def up_level(user_id):
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
+        level = i[0]
+    db = sq.connect("new db1", timeout=5)
+    cur_l = db.cursor()
+    for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = {user_id}"""):
+        ex = i[0]
+        print(ex)
+    for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = {user_id}"""):
+        ex_level = i[0]
+        print(ex_level)
+    if ex_level <= ex:
+        x = 100
+        y = 0
+        cur.execute(f"""UPDATE user_db SET level_user = '{level + 1}' WHERE user_id = {user_id}""")
+        await bot.send_message(chat_id=user_id,
+                            text= f"XP полон! Ваш уровень увеличен до {level + 1}")
+        cur_l.execute(f"""UPDATE level SET ex_level = '{x}' WHERE user_id = {user_id}""")
+        cur_l.execute(f"""UPDATE level SET ex = '{y}' WHERE user_id = {user_id}""")
+        db.commit()
 
 
 """______________________инлайн клава для выбора класса____________________________"""
@@ -242,7 +268,7 @@ async def farm_start(message: types.Message):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
         level = i[0]
-    if level == 1:
+    if level >= 1:
         db = sq.connect("new db1")
         cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = {message.from_user.id}"""):
@@ -269,7 +295,7 @@ async def farm_start(message: types.Message):
             for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
                 time_farm_user = i[0]
             time_farm = time_farm_user-(speed_farm_user/10)
-
+            db.close()
             upload_message = await bot.send_message(chat_id=message.chat.id,
                                                     text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
                                                     parse_mode="HTML")
@@ -281,15 +307,15 @@ async def farm_start(message: types.Message):
                 d.append(sym * 1)
                 x += 10
                 await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-                await asyncio.sleep(time_farm/10)
+                await asyncio.sleep(0.1)
             await asyncio.sleep(0.5)
             await upload_message.delete()
             await xp_add(user_id=message.from_user.id)
+            db.close()
             await bot.send_message(chat_id=message.from_user.id,
                                    text=XP_ADD.format(0.2, XP, XP_level),
                                    parse_mode="HTML")
-            await asyncio.sleep(0.5)
-
+            await up_level(user_id=message.from_user.id)
         else:
             await bot.send_message(chat_id=message.from_user.id,
                                 text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
@@ -474,7 +500,9 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                 f"""SELECT mana_all FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             mana_farm = i[0]
         cur_table_farm.execute(
-            f"""UPDATE user_farm SET mana_all = {mana_farm + 10} WHERE user_id = '{callback_query.from_user.id}'""")
+            f"""UPDATE user_farm SET mana_all = {mana_farm + 30} WHERE user_id = '{callback_query.from_user.id}'""")
+        cur_table_farm.execute(
+            f"""UPDATE user_farm SET mana = {mana_farm + 30} WHERE user_id = '{callback_query.from_user.id}'""")
         db.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
