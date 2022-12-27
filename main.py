@@ -339,11 +339,12 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Светлых эльфов"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
+        db_table_farm = sq.connect("table farm")
         cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
         cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = {speed_farm + 40} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -364,7 +365,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Темных эльфов'"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db = sq.connect("new db1")
+        db_table_farm = sq.connect("table farm")
         cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
@@ -378,7 +379,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm-10} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 10} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -399,7 +400,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                text=vibor_weapon.format("Рыцарей"),
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
-        db = sq.connect("new db1")
+        db_table_farm = sq.connect("new db1")
         cur_table_farm = db.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
@@ -413,7 +414,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm-15} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 15} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
