@@ -83,8 +83,8 @@ async def update_weapon_skipetr(user_id):
 """_________________________создание бд с личными знач. пользователя_______________"""
 async def db_farm(user_id):
     global db_table_farm, cur_table_farm
-    db = sq.connect("new db1")
-    cur_table_farm = db.cursor()
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
 
     cur_table_farm.execute("""CREATE TABLE IF NOT EXISTS user_farm(
                         user_id  INT,
@@ -92,12 +92,12 @@ async def db_farm(user_id):
                         mana INT,
                         time_farm INT,
                         mana_all INT);""")
-    db.commit()
+    db_table_farm.commit()
     cur_table_farm.execute(f"""SELECT user_id FROM user_farm WHERE user_id = '{user_id}'""")
     if cur_table_farm.fetchone() is None:
         user_info = (user_id, 100, 300, 60, 300)
         cur_table_farm.execute("""INSERT INTO user_farm VALUES(?, ?, ?, ?, ?)""", user_info)
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
 
@@ -109,27 +109,27 @@ async def db_farm(user_id):
 
 
 async def db_lev(user_id):
-    global db, cur_l
-    db = sq.connect("new db1")
+    global db_l, cur_l
+    db_l = sq.connect("table level")
     cur_l = db.cursor()
 
     cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
                     user_id  INT,
                     ex_level REAL,
                     ex REAL);""")
-    db.commit()
+    db_l.commit()
     cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
     if cur_l.fetchone() is None:
         user_info = (user_id, 25, 24.6)
         cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
-        db.commit()
+        db_l.commit()
         for i in cur_l.execute("""SELECT * FROM level"""):
             print(i)
 
 # add xp in table level
 async def xp_add(user_id):
     global XP, XP_level
-    db = sq.connect("new db1")
+    db_l = sq.connect("table level")
     cur_l = db.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         XP_level = i[0]
@@ -140,17 +140,17 @@ async def xp_add(user_id):
     XP += 0.2
     XP = round(XP, 1)
     cur_l.execute(f"""UPDATE level SET ex = {XP} WHERE user_id = '{user_id}'""")
-    db.commit()
+    db_l.commit()
 
 
 
 
 async def mana_update(mana_now, user_id):
     mana_now -= 5
-    db = sq.connect("new db1")
-    cur_table_farm = db.cursor()
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
     cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{mana_now}' WHERE user_id = {user_id}""")
-    db.commit()
+    db_table_farm.commit()
     await bot.send_message(chat_id=user_id,
                            text=f"""<em>Потрачено <b>5 маны!</b>
                                      Остаток: <b>{mana_now}</b></em>""",
@@ -162,7 +162,7 @@ async def up_level(user_id):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
         level = i[0]
-    db = sq.connect("new db1", timeout=5)
+    db_l = sq.connect("table level")
     cur_l = db.cursor()
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = {user_id}"""):
         ex = i[0]
@@ -174,11 +174,12 @@ async def up_level(user_id):
         x = 100
         y = 0
         cur.execute(f"""UPDATE user_db SET level_user = '{level + 1}' WHERE user_id = {user_id}""")
+        db.commit()
         await bot.send_message(chat_id=user_id,
                             text= f"XP полон! Ваш уровень увеличен до {level + 1}")
         cur_l.execute(f"""UPDATE level SET ex_level = '{x}' WHERE user_id = {user_id}""")
         cur_l.execute(f"""UPDATE level SET ex = '{y}' WHERE user_id = {user_id}""")
-        db.commit()
+        db_l.commit()
 
 
 """______________________инлайн клава для выбора класса____________________________"""
