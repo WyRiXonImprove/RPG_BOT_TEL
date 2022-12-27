@@ -42,7 +42,7 @@ def prov():
 
 """_____________________________________апдейт классов_________________________________"""
 async def update_class_white_elf(user_id):
-    db = sq.connect("db class")
+    db = sq.connect("new db1")
     cur = db.cursor()
     cur.execute(f"""UPDATE user_db SET class = '{white_elf}' WHERE user_id = '{user_id}'""")
     db.commit()
@@ -130,7 +130,7 @@ async def db_lev(user_id):
 async def xp_add(user_id):
     global XP, XP_level
     db_l = sq.connect("new db1")
-    cur_l = db.cursor()
+    cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         XP_level = i[0]
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = '{user_id}'"""):
@@ -333,7 +333,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
-        db.close()
+    db.close()
     if check_class == "":
         await update_class_white_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
@@ -341,7 +341,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
         db_table_farm = sq.connect("table farm")
-        cur_table_farm = db.cursor()
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
         cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = {speed_farm + 40} WHERE user_id = '{callback_query.from_user.id}'""")
@@ -367,7 +367,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
         db_table_farm = sq.connect("table farm")
-        cur_table_farm = db.cursor()
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
@@ -402,7 +402,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                parse_mode="HTML",
                                reply_markup=inl_button_weapon)
         db_table_farm = sq.connect("new db1")
-        cur_table_farm = db.cursor()
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
