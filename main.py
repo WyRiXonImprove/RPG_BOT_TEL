@@ -3,6 +3,7 @@ import asyncio
 import sqlite3 as sq
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from text import *
+from slovari import *
 import time
 
 if time.strftime("%X") >= '07:00:00' and time.strftime('%X') <= '10:00:00':
@@ -127,7 +128,7 @@ async def db_lev(user_id):
             print(i)
 
 # add xp in table level
-async def xp_add(user_id):
+async def xp_add(user_id, level):
     global XP, XP_level
     db_l = sq.connect("table level")
     cur_l = db_l.cursor()
@@ -137,7 +138,7 @@ async def xp_add(user_id):
         XP = i[0]
         print(XP)
     XP = round(XP, 1)
-    XP += 0.2
+    XP += level_xp[level]
     XP = round(XP, 1)
     cur_l.execute(f"""UPDATE level SET ex = {XP} WHERE user_id = '{user_id}'""")
     db_l.commit()
@@ -152,7 +153,7 @@ async def mana_update(mana_now, user_id):
     cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{mana_now}' WHERE user_id = {user_id}""")
     db_table_farm.commit()
     await bot.send_message(chat_id=user_id,
-                           text=f"""<em>Потрачено <b>5 маны!</b>
+                           text=f"""<em>Потрачено <b>{5} маны</b>
                                      Остаток: <b>{mana_now}</b></em>""",
                             parse_mode="HTML")
 
@@ -274,7 +275,7 @@ async def farm_start(message: types.Message):
         cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
             mana_now = i[0]
-        if mana_now >= 5:
+        if mana_now >= level_xp[level]:
             await mana_update(mana_now, user_id=message.from_user.id)
             upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
             await asyncio.sleep(1)
@@ -309,9 +310,9 @@ async def farm_start(message: types.Message):
                 await asyncio.sleep(0.1)
             await asyncio.sleep(0.5)
             await upload_message.delete()
-            await xp_add(user_id=message.from_user.id)
+            await xp_add(user_id=message.from_user.id, level=level)
             await bot.send_message(chat_id=message.from_user.id,
-                                   text=XP_ADD.format(0.2, XP, XP_level),
+                                   text=XP_ADD.format(level_xp[level], XP, XP_level),
                                    parse_mode="HTML")
             await up_level(user_id=message.from_user.id)
         else:
