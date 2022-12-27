@@ -112,7 +112,7 @@ async def db_farm(user_id):
 async def db_lev(user_id):
     global db_l, cur_l
     db_l = sq.connect("table level")
-    cur_l = db.cursor()
+    cur_l = db_l.cursor()
 
     cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
                     user_id  INT,
@@ -146,14 +146,15 @@ async def xp_add(user_id, level):
 
 
 
-async def mana_update(mana_now, user_id):
-    mana_now -= 5
+async def mana_update(mana_now, level, user_id):
+    mana_now -= level_to_mana[level]
     db_table_farm = sq.connect("table farm")
     cur_table_farm = db_table_farm.cursor()
     cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{mana_now}' WHERE user_id = {user_id}""")
     db_table_farm.commit()
+    db_table_farm.close()
     await bot.send_message(chat_id=user_id,
-                           text=f"""<em>Потрачено <b>{5} маны</b>
+                           text=f"""<em>Потрачено <b>{level_to_mana[level]} маны</b>
                                      Остаток: <b>{mana_now}</b></em>""",
                             parse_mode="HTML")
 
@@ -173,14 +174,20 @@ async def up_level(user_id):
         print(ex_level)
     if ex_level <= ex:
         x = 100
-        y = 0
-        cur.execute(f"""UPDATE user_db SET level_user = '{level + 1}' WHERE user_id = {user_id}""")
+        level += 1
+        cur.execute(f"""UPDATE user_db SET level_user = '{level}' WHERE user_id = {user_id}""")
         db.commit()
+        db_table_farm = sq.connect("table farm")
+        cur_table_farm = db_table_farm.cursor()
+        cur_table_farm.execute(f"""UPDATE user_farm SET time_farm = '{xp_to_time[level]}'""")
+        db_table_farm.commit()
+        db_table_farm.close()
         await bot.send_message(chat_id=user_id,
-                            text= f"XP полон! Ваш уровень увеличен до {level + 1}")
+                            text= f"XP полон! Ваш уровень увеличен до {level}")
         cur_l.execute(f"""UPDATE level SET ex_level = '{x}' WHERE user_id = {user_id}""")
-        cur_l.execute(f"""UPDATE level SET ex = '{y}' WHERE user_id = {user_id}""")
+        cur_l.execute(f"""UPDATE level SET ex = '{0}' WHERE user_id = {user_id}""")
         db_l.commit()
+        prov()
 
 
 """______________________инлайн клава для выбора класса____________________________"""
@@ -266,9 +273,10 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
+    prov()
     db = sq.connect("new db1")
     cur = db.cursor()
-    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
         level = i[0]
     if level >= 1:
         db_table_farm = sq.connect("table farm")
@@ -276,7 +284,7 @@ async def farm_start(message: types.Message):
         for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
             mana_now = i[0]
         if mana_now >= level_xp[level]:
-            await mana_update(mana_now, user_id=message.from_user.id)
+            await mana_update(mana_now, level=level, user_id=message.from_user.id)
             upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
             await asyncio.sleep(1)
             sym = '▌'
@@ -295,7 +303,6 @@ async def farm_start(message: types.Message):
                 speed_farm_user = i[0]
             for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
                 time_farm_user = i[0]
-            time_farm_user += xp_to_time[level]
             time_farm = time_farm_user-(speed_farm_user/10)
             upload_message = await bot.send_message(chat_id=message.chat.id,
                                                     text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
@@ -308,7 +315,7 @@ async def farm_start(message: types.Message):
                 d.append(sym * 1)
                 x += 10
                 await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(time_farm/10)
             await asyncio.sleep(0.5)
             await upload_message.delete()
             await xp_add(user_id=message.from_user.id, level=level)
@@ -362,8 +369,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
+    db.close()
     if check_class == "":
-        db.close()
         await update_class_dark_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=vibor_weapon.format("Темных эльфов'"),
