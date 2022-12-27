@@ -270,8 +270,8 @@ async def farm_start(message: types.Message):
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
         level = i[0]
     if level >= 1:
-        db = sq.connect("new db1")
-        cur_table_farm = db.cursor()
+        db_table_farm = sq.connect("table farm")
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = {message.from_user.id}"""):
             mana_now = i[0]
         if mana_now >= 5:
@@ -290,13 +290,11 @@ async def farm_start(message: types.Message):
             await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
             await asyncio.sleep(0.5)
             await upload_message.delete()
-            cur_table_farm = db.cursor()
             for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
                 speed_farm_user = i[0]
             for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
                 time_farm_user = i[0]
             time_farm = time_farm_user-(speed_farm_user/10)
-            db.close()
             upload_message = await bot.send_message(chat_id=message.chat.id,
                                                     text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
                                                     parse_mode="HTML")
@@ -312,7 +310,6 @@ async def farm_start(message: types.Message):
             await asyncio.sleep(0.5)
             await upload_message.delete()
             await xp_add(user_id=message.from_user.id)
-            db.close()
             await bot.send_message(chat_id=message.from_user.id,
                                    text=XP_ADD.format(0.2, XP, XP_level),
                                    parse_mode="HTML")
@@ -439,12 +436,12 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                     text=start_farm.format("Меч"),
                                     parse_mode="HTML")
-        db = sq.connect("new db1")
-        cur_table_farm = db.cursor()
+        db_table_farm = sq.connect("table farm")
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
         cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = {speed_farm + 10} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -463,8 +460,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                    text=start_farm.format("Лук"),
                                    parse_mode="HTML")
-        db = sq.connect("new db1")
-        cur_table_farm = db.cursor()
+        db_table_farm = sq.connect("table farm")
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT speed_farm FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             speed_farm = i[0]
@@ -477,7 +474,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm - 5} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 5} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
@@ -496,7 +493,8 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.from_user.id,
                                    text=start_farm.format("Магический Скипетр"),
                                    parse_mode="HTML")
-        cur_table_farm = db.cursor()
+        db_table_farm = sq.connect("table farm")
+        cur_table_farm = db_table_farm.cursor()
         for i in cur_table_farm.execute(
                 f"""SELECT mana_all FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
             mana_farm = i[0]
@@ -504,7 +502,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
             f"""UPDATE user_farm SET mana_all = {mana_farm + 30} WHERE user_id = '{callback_query.from_user.id}'""")
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm + 30} WHERE user_id = '{callback_query.from_user.id}'""")
-        db.commit()
+        db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
     else:
