@@ -112,7 +112,7 @@ async def db_farm(user_id):
 async def db_lev(user_id):
     global db_l, cur_l
     db_l = sq.connect("table level")
-    cur_l = db_l.cursor()
+    cur_l = db.cursor()
 
     cur_l.execute("""CREATE TABLE IF NOT EXISTS level(
                     user_id  INT,
@@ -268,7 +268,7 @@ async def game_start(message: types.Message):
 async def farm_start(message: types.Message):
     db = sq.connect("new db1")
     cur = db.cursor()
-    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {message.from_user.id}"""):
         level = i[0]
     if level >= 1:
         db_table_farm = sq.connect("table farm")
@@ -295,6 +295,7 @@ async def farm_start(message: types.Message):
                 speed_farm_user = i[0]
             for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
                 time_farm_user = i[0]
+            time_farm_user += xp_to_time[level]
             time_farm = time_farm_user-(speed_farm_user/10)
             upload_message = await bot.send_message(chat_id=message.chat.id,
                                                     text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
