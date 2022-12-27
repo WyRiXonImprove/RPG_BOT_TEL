@@ -42,7 +42,7 @@ def prov():
 
 """_____________________________________апдейт классов_________________________________"""
 async def update_class_white_elf(user_id):
-    db = sq.connect("new db1")
+    db = sq.connect("db class")
     cur = db.cursor()
     cur.execute(f"""UPDATE user_db SET class = '{white_elf}' WHERE user_id = '{user_id}'""")
     db.commit()
@@ -129,7 +129,7 @@ async def db_lev(user_id):
 # add xp in table level
 async def xp_add(user_id):
     global XP, XP_level
-    db_l = sq.connect("table level")
+    db_l = sq.connect("new db1")
     cur_l = db.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         XP_level = i[0]
@@ -333,6 +333,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
+        db.close()
     if check_class == "":
         await update_class_white_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
