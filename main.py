@@ -258,63 +258,66 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
+    global mana_now
     prov()
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
         level = i[0]
-    if level >= 1:
-        db_table_farm = sq.connect("table farm")
-        cur_table_farm = db_table_farm.cursor()
-        for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
-            mana_now = i[0]
-        if mana_now >= level_xp[level]:
-            await mana_update(mana_now, level=level, user_id=message.from_user.id)
-            upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
-            await asyncio.sleep(1)
-            sym = '▌'
-            x = 10
-            d = []
-            for i in range(10):
-                d.append(sym * 1)
-                x += 10
-                await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-                await asyncio.sleep(0.1)
-            await asyncio.sleep(0.2)
-            await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
-            await asyncio.sleep(0.5)
-            await upload_message.delete()
-            for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
-                speed_farm_user = i[0]
-            for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
-                time_farm_user = i[0]
-            time_farm = time_farm_user-(speed_farm_user/10)
-            upload_message = await bot.send_message(chat_id=message.chat.id,
-                                                    text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
-                                                    parse_mode="HTML")
-            await asyncio.sleep(2)
-            sym = '▌'
-            x = 0
-            d = []
-            for i in range(9):
-                d.append(sym * 1)
-                x += 10
-                await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-                await asyncio.sleep(time_farm/10)
-            await asyncio.sleep(0.5)
-            await upload_message.delete()
-            await xp_add(user_id=message.from_user.id, level=level)
-            await bot.send_message(chat_id=message.from_user.id,
-                                   text=XP_ADD.format(level_xp[level], XP, XP_level),
-                                   parse_mode="HTML")
-            await up_level(user_id=message.from_user.id)
-        else:
-            await bot.send_message(chat_id=message.from_user.id,
-                                text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
+    for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
+        mana_now = i[0]
+    if mana_now >= level_xp[level]:
+        await mana_update(mana_now, level=level, user_id=message.from_user.id)
+        upload_message = await bot.send_message(chat_id=message.chat.id, text="Начинаем телепортацию🌍....")
+        await asyncio.sleep(1)
+        sym = '▌'
+        x = 10
+        d = []
+        for i in range(10):
+            d.append(sym * 1)
+            x += 10
+            await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+            await asyncio.sleep(0.1)
+        await asyncio.sleep(0.2)
+        await upload_message.edit_text(text='<b>Телепортировано</b>', parse_mode="HTML")
+        await asyncio.sleep(0.5)
+        await upload_message.delete()
+        for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
+            speed_farm_user = i[0]
+        for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
+            time_farm_user = i[0]
+        time_farm = time_farm_user-(speed_farm_user/10)
+        upload_message = await bot.send_message(chat_id=message.chat.id,
+                                                text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
+                                                parse_mode="HTML")
+        await asyncio.sleep(2)
+        sym = '▌'
+        x = 0
+        d = []
+        for i in range(9):
+            d.append(sym * 1)
+            x += 10
+            await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
+            await asyncio.sleep(time_farm/10)
+        await asyncio.sleep(0.5)
+        await upload_message.delete()
+        await xp_add(user_id=message.from_user.id, level=level)
+        await bot.send_message(chat_id=message.from_user.id,
+                               text=XP_ADD.format(level_xp[level], XP, XP_level),
+                               parse_mode="HTML")
+        await up_level(user_id=message.from_user.id)
+    else:
+        await bot.send_message(chat_id=message.from_user.id,
+                            text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
 
-
-
-
+#TODO Доработка значений класса = добавить
+#TODO Платежка
+#TODO Босс
+#TODO Автообновление значений
+#TODO Донат
+#TODO Сервак
 
 
 
