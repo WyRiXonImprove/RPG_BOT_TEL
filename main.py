@@ -201,7 +201,7 @@ async def mana_update(level, user_id):
                            parse_mode="HTML")
 
 
-async def up_level(level, user_id):
+async def up_level(user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
@@ -347,6 +347,36 @@ async def gold_add_user(user_id):
                                text=GOLD_ADD.format(gold_add),
                                parse_mode="HTML")
 
+"""_________________________________Профиль_________________________________________"""
+async def select_profile(user_id):
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = {user_id}"""):
+        class_user = i[0]
+        if class_user == "white_elf":
+            class_user = "Светлый эльф"
+        elif class_user == "dark_elf":
+            class_user = "Темный эльф"
+        else:
+            class_user = "Рыцарь"
+    for i in cur.execute(f"""SELECT weapon FROM user_db WHERE user_id = {user_id}"""):
+        weapon = i[0]
+        if weapon == "bow":
+            weapon = "Лук"
+        elif weapon == "skipetr":
+            weapon = "Магический скипетр"
+        else:
+            weapon = "Меч"
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
+        level = i[0]
+    for i in cur.execute(f"""SELECT gold FROM user_db WHERE user_id = {user_id}"""):
+        gold = i[0]
+    db.close()
+    await bot.send_message(chat_id=user_id,
+                           text=PROFILE.format(class_user, weapon, level, gold),
+                           parse_mode="HTML")
+
+"""______________________инлайн клава для выбора класса____________________________"""
 """______________________инлайн клава для выбора класа____________________________"""
 inl_button_class = InlineKeyboardMarkup(row_width=3)
 inl_button_white_elf = InlineKeyboardButton(text="Светлый эльф",
@@ -370,13 +400,13 @@ inl_button_weapon.add(inl_button_sword, inl_button_bow, inl_button_skipetr)
 """________________________________________________________________________________"""
 
 """_______________________________________клава ___________________________________"""
-b_help = KeyboardButton('/help')
+b_profile = KeyboardButton('/profile')
 b_game = KeyboardButton('/game')
 b_buy = KeyboardButton('/buy')
 b_farm = KeyboardButton('/farm')
 
 kb = ReplyKeyboardMarkup(resize_keyboard=True)
-kb.add(b_help).insert(b_game).add(b_buy).insert(b_farm)
+kb.add(b_game).insert(b_farm).add(b_buy).insert(b_profile)
 """________________________________________________________________________________"""
 
 bot = Bot(TOKEN)
@@ -413,7 +443,10 @@ async def game_start(message: types.Message):
                            parse_mode="HTML",
                            reply_markup=inl_button_class)
 
-
+@dp.message_handler(commands=["profile"])
+async def profile(message: types.Message):
+    await select_profile(user_id=message.chat.id)
+    await message.delete()
 
 
 

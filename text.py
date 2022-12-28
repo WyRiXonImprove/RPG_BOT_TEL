@@ -87,3 +87,8 @@ GOLD_ADD = """Добавлено золота: <b>{}</b>"""
 white_elf = "white_elf"
 dark_elf = "dark_elf"
 knights = "knights"
+
+PROFILE ="""Ваш класс: <b>{}</b>
+Ваше оружее: <b>{}</b>
+Ваш уровень: <b>{}</b>
+Ваше золото: <b>{}</b>"""
