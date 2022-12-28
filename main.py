@@ -208,37 +208,57 @@ async def mana_update(level, user_id):
                            parse_mode="HTML")
 
 
-async def up_level(user_id):
+async def up_level(level, user_id):
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = {user_id}"""):
         level = i[0]
+
     db_l = sq.connect("table level")
     cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = {user_id}"""):
         ex = i[0]
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         ex_level = i[0]
+
     if ex_level <= ex:
         cur_l.execute(f"""UPDATE level SET ex = {ex - ex_level} WHERE user_id = '{user_id}'""")
         db_l.commit()
         db_l.close()
+
         level += 1
         cur.execute(f"""UPDATE user_db SET level_user = {level} WHERE user_id = {user_id}""")
         db.commit()
+        db.close()
+
         db_table_farm = sq.connect("table farm")
         cur_table_farm = db_table_farm.cursor()
+        for i in cur_table_farm.execute(f"""SELECT speed_farm FROM user_farm WHERE user_id = {user_id}"""):
+            speed_farm = i[0]
+        for i in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{user_id}'"""):
+            mana_all = i[0]
+        speed_farm += reward_sf[level]
+        mana_all += reward_mana[level]
+        cur_table_farm.execute(f"""UPDATE user_farm SET speed_farm = '{speed_farm}'""")
+        cur_table_farm.execute(f"""UPDATE user_farm SET mana_all = '{mana_all}'""")
         cur_table_farm.execute(f"""UPDATE user_farm SET time_farm = '{xp_to_time[level]}'""")
         db_table_farm.commit()
-        db_table_farm.close()
+
+
         await bot.send_message(chat_id=user_id,
-                               text=f"XP полон! Ваш уровень увеличен до {level}")
+                               text=f"XP полон! Ваш уровень увеличен до {level}\n"
+                                    f"SF увеличен на {str(reward_sf[level])}, мана увеличина на {str(mana_all[level])}")
         db_l = sq.connect("table level")
         cur_l = db_l.cursor()
         cur_l.execute(f"""UPDATE level SET ex_level = '{level_to_xp[level]}' WHERE user_id = '{user_id}'""")
         db_l.commit()
         db_l.close()
-        prov()
+
+def prov1():
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
+    for i in cur_table_farm.execute("""SELECT * FROM  user_farm"""):
+        print(i)
 
 
 """______________________инлайн клава для выбора класса____________________________"""
@@ -290,6 +310,7 @@ async def start_message(message: types.Message):
     await new_db(user_id=message.from_user.id)
     await db_lev(user_id=message.from_user.id)
     await db_farm(user_id=message.from_user.id)
+    prov1()
     await message.delete()
 
 
@@ -359,7 +380,7 @@ async def farm_start(message: types.Message):
                                 parse_mode="HTML")
 
         await mana_update(level=level, user_id=message.from_user.id)
-        await up_level(user_id=message.from_user.id)
+        await up_level(level = level, user_id=message.from_user.id)
         time_o = datetime.now()
     else:
         await bot.send_message(chat_id=message.from_user.id,
