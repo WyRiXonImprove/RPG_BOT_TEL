@@ -1,5 +1,4 @@
 import random
-
 from aiogram import Bot, Dispatcher, executor, types
 import asyncio
 import sqlite3 as sq
@@ -28,14 +27,15 @@ async def new_db(user_id):
                     user_id  INT,
                     class TEXT,
                     weapon TEXT,
-                    level_user INT);""")
+                    level_user INT,
+                    gold INT);""")
     db.commit()
     db = sq.connect("new db1")
     cur = db.cursor()
     cur.execute(f"""SELECT user_id FROM user_db WHERE user_id = '{user_id}'""")
     if cur.fetchone() is None:
-        user_info = (user_id, "", "", 1)
-        cur.execute("""INSERT INTO user_db VALUES(?, ?, ?, ?)""", user_info)
+        user_info = (user_id, "", "", 1, 0)
+        cur.execute("""INSERT INTO user_db VALUES(?, ?, ?, ?, ?)""", user_info)
         db.commit()
         for i in cur.execute("""SELECT * FROM user_db"""):
             print(i)
@@ -148,7 +148,7 @@ async def db_lev(user_id):
 
 
 
-# add xp in table level
+#add xp in table level
 async def xp_add(user_id, level):
     global XP, XP_level, a
     db_l = sq.connect("table level")
@@ -165,30 +165,23 @@ async def xp_add(user_id, level):
     XP = round(XP, 1)
     if check_class == "white_elf":
         a = random.randint(1, 20)
-        print(a)
         if a == 4:
             XP += level_xp[level] * 2
             XP = round(XP, 1)
-            print(XP, 'add')
         else:
             XP += level_xp[level]
             XP = round(XP, 1)
-            print(XP)
     elif check_class == 'knights':
         b = random.randint(1, 10)
-        print(b)
         if b == 4:
             XP += level_xp[level] * 1.5
             XP = round(XP, 1)
-            print(XP, 'add')
         else:
             XP += level_xp[level]
             XP = round(XP, 1)
-            print(XP)
     else:
         XP += level_xp[level]
         XP = round(XP, 1)
-        print(XP, 'no add')
     cur_l.execute(f"""UPDATE level SET ex = {XP} WHERE user_id = '{user_id}'""")
     db_l.commit()
 
@@ -243,8 +236,7 @@ async def up_level(level, user_id):
         cur_table_farm.execute(f"""UPDATE user_farm SET mana_all = '{mana_all}'""")
         cur_table_farm.execute(f"""UPDATE user_farm SET time_farm = '{xp_to_time[level]}'""")
         db_table_farm.commit()
-
-
+        db_table_farm.close()
         await bot.send_message(chat_id=user_id,
                                text=f"XP полон! Ваш уровень увеличен до {level}\n"
                                     f"SF увеличен на {str(reward_sf[level])}, мана увеличина на {str(mana_all[level])}")
@@ -253,13 +245,107 @@ async def up_level(level, user_id):
         cur_l.execute(f"""UPDATE level SET ex_level = '{level_to_xp[level]}' WHERE user_id = '{user_id}'""")
         db_l.commit()
         db_l.close()
+        prov()
 
-def prov1():
-    db_table_farm = sq.connect("table farm")
-    cur_table_farm = db_table_farm.cursor()
-    for i in cur_table_farm.execute("""SELECT * FROM  user_farm"""):
-        print(i)
 
+"""_______________________________________GOLD system______________________________"""
+async def gold_add_user(user_id):
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute(f"""SELECT gold FROM user_db WHERE user_id = '{user_id}'"""):
+        gold = i[0]
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{user_id}'"""):
+        level = i[0]
+    if level == 1:
+        gold_add = random.randint(5, 10)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 2:
+        gold_add = random.randint(11, 18)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 3:
+        gold_add = random.randint(19, 30)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 4:
+        gold_add = random.randint(31, 45)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 5:
+        gold_add = random.randint(46, 62)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 6:
+        gold_add = random.randint(63, 80)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 7:
+        gold_add = random.randint(81, 100)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 8:
+        gold_add = random.randint(101, 124)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    elif level == 9:
+        gold_add = random.randint(125, 150)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
+    else:
+        gold_add = random.randint(151, 181)
+        gold += gold_add
+        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+        db.commit()
+        db.close()
+        await bot.send_message(chat_id=user_id,
+                               text=GOLD_ADD.format(gold_add),
+                               parse_mode="HTML")
 
 """______________________инлайн клава для выбора класса____________________________"""
 inl_button_class = InlineKeyboardMarkup(row_width=3)
@@ -295,7 +381,7 @@ kb.add(b_help).insert(b_game).add(b_buy).insert(b_farm)
 
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
-
+k = 0
 
 async def on_start_up(_):
     print("Бот запущен!")
@@ -310,7 +396,6 @@ async def start_message(message: types.Message):
     await new_db(user_id=message.from_user.id)
     await db_lev(user_id=message.from_user.id)
     await db_farm(user_id=message.from_user.id)
-    prov1()
     await message.delete()
 
 
@@ -329,20 +414,19 @@ async def game_start(message: types.Message):
                            reply_markup=inl_button_class)
 
 
-time_o = datetime.now()
+
 
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    global time_o
-    global mana_now
-    global a
+    global k, time_o, mana_now
+    while k == 0:
+        time_o = datetime.now()
+        k+=1
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
         level = i[0]
-    for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{message.from_user.id}'"""):
-        check_class = i[0]
     db_table_farm = sq.connect("table farm")
     cur_table_farm = db_table_farm.cursor()
     for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
@@ -380,14 +464,16 @@ async def farm_start(message: types.Message):
                                 parse_mode="HTML")
 
         await mana_update(level=level, user_id=message.from_user.id)
-        await up_level(level = level, user_id=message.from_user.id)
+        await up_level(user_id=message.chat.id)
+        await gold_add_user(user_id=message.chat.id)
         time_o = datetime.now()
+        prov()
     else:
         await bot.send_message(chat_id=message.from_user.id,
                                text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
 
 
-# TODO Доработка значений класса = добавить
+# TODO Доработка значений класса = добавить - !!сделано!!
 # TODO Платежка
 # TODO Босс
 # TODO Автообновление значений
