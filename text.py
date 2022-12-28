@@ -1,3 +1,4 @@
+import random
 import time
 
 TOKEN = "5608746480:AAESSuAzhT4-tyKHmpQGlT1MAFcxz8ffppU"
@@ -80,6 +81,8 @@ start_farm = """
 
 XP_ADD = """Добавлено: {}XP
 Всего: {}/{}XP"""
+
+GOLD_ADD = """Добавлено золота: <b>{}</b>"""
 
 white_elf = "white_elf"
 dark_elf = "dark_elf"
