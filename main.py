@@ -5,6 +5,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemo
 from text import *
 from slovari import *
 import time
+from datetime import datetime, timedelta
 
 if time.strftime("%X") >= '07:00:00' and time.strftime('%X') <= '10:00:00':
     welcome = welcome_morning
@@ -146,11 +147,13 @@ async def xp_add(user_id, level):
 
 
 
-async def mana_update(mana_now, level, user_id):
-    mana_now -= level_to_mana[level]
+async def mana_update(level, user_id):
     db_table_farm = sq.connect("table farm")
     cur_table_farm = db_table_farm.cursor()
-    cur_table_farm.execute(f"""UPDATE user_farm SET mana = '{mana_now}' WHERE user_id = {user_id}""")
+    for i in cur_table_farm.execute(f"""SELECT mana FROM user_farm WHERE user_id = '{user_id}'"""):
+        mana_now = i[0]
+    mana_now -= level_to_mana[level]
+    cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_now} WHERE user_id = '{user_id}'""")
     db_table_farm.commit()
     db_table_farm.close()
     await bot.send_message(chat_id=user_id,
@@ -168,13 +171,14 @@ async def up_level(user_id):
     cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex FROM level WHERE user_id = {user_id}"""):
         ex = i[0]
-    for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = {user_id}"""):
+    for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
         ex_level = i[0]
     if ex_level <= ex:
-        cur_l.execute(f"""UPDATE level SET ex = '{ex-ex_level}' WHERE user_id = {user_id}""")
+        cur_l.execute(f"""UPDATE level SET ex = {ex - ex_level} WHERE user_id = '{user_id}'""")
+        db_l.commit()
         db_l.close()
         level += 1
-        cur.execute(f"""UPDATE user_db SET level_user = '{level}' WHERE user_id = {user_id}""")
+        cur.execute(f"""UPDATE user_db SET level_user = {level} WHERE user_id = {user_id}""")
         db.commit()
         db_table_farm = sq.connect("table farm")
         cur_table_farm = db_table_farm.cursor()
@@ -183,8 +187,11 @@ async def up_level(user_id):
         db_table_farm.close()
         await bot.send_message(chat_id=user_id,
                             text= f"XP полон! Ваш уровень увеличен до {level}")
-        cur_l.execute(f"""UPDATE level SET ex_level = '{level_to_xp[level]}' WHERE user_id = {user_id}""")
+        db_l = sq.connect("table level")
+        cur_l = db_l.cursor()
+        cur_l.execute(f"""UPDATE level SET ex_level = '{level_to_xp[level]}' WHERE user_id = '{user_id}'""")
         db_l.commit()
+        db_l.close()
         prov()
 
 
@@ -285,10 +292,11 @@ async def farm_start(message: types.Message):
             speed_farm_user = i[0]
         for i in cur_table_farm.execute(f"""SELECT time_farm FROM user_farm WHERE user_id = '{message.from_user.id}'"""):
             time_farm_user = i[0]
+        db_table_farm.close()
         global time_farm
         time_farm = time_farm_user-(speed_farm_user/10)
         upload_message = await bot.send_message(chat_id=message.chat.id,
-                                                text=f"Фарм площади составляет: <b>{time_farm} секунд!</b>",
+                                                text=f"Фарм площади составляет: <b>{int(time_farm)} секунд!</b>",
                                                 parse_mode="HTML")
         await asyncio.sleep(2)
         sym = '▌'
@@ -305,7 +313,7 @@ async def farm_start(message: types.Message):
         await bot.send_message(chat_id=message.from_user.id,
                                text=XP_ADD.format(level_xp[level], XP, XP_level),
                                parse_mode="HTML")
-        await mana_update(mana_now, level=level, user_id=message.from_user.id)
+        await mana_update(level=level, user_id=message.from_user.id)
         await up_level(user_id=message.from_user.id)
     else:
         await bot.send_message(chat_id=message.from_user.id,
