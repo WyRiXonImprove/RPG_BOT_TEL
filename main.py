@@ -140,7 +140,7 @@ async def db_lev(user_id):
     db_l.commit()
     cur_l.execute(f"""SELECT user_id FROM level WHERE user_id = '{user_id}'""")
     if cur_l.fetchone() is None:
-        user_info = (user_id, 5, 4.6)
+        user_info = (user_id, 5, 0)
         cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
         db_l.commit()
         for i in cur_l.execute("""SELECT * FROM level"""):
