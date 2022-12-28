@@ -347,7 +347,7 @@ async def gold_add_user(user_id):
                                text=GOLD_ADD.format(gold_add),
                                parse_mode="HTML")
 
-"""______________________инлайн клава для выбора класса____________________________"""
+"""______________________инлайн клава для выбора класа____________________________"""
 inl_button_class = InlineKeyboardMarkup(row_width=3)
 inl_button_white_elf = InlineKeyboardButton(text="Светлый эльф",
                                             callback_data="white_elf")
