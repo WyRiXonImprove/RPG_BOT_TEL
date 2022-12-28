@@ -367,7 +367,7 @@ kb.add(b_help).insert(b_game).add(b_buy).insert(b_farm)
 
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
-
+k = 0
 
 async def on_start_up(_):
     print("Бот запущен!")
@@ -400,14 +400,15 @@ async def game_start(message: types.Message):
                            reply_markup=inl_button_class)
 
 
-time_o = datetime.now()
+
 
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    global time_o
-    global mana_now
-    global a
+    global k, time_o, mana_now
+    while k == 0:
+        time_o = datetime.now()
+        k+=1
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
