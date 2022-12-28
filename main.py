@@ -252,7 +252,7 @@ async def up_level(user_id):
         db_table_farm.close()
         await bot.send_message(chat_id=user_id,
                                text=f"XP полон! Ваш уровень увеличен до {level}\n"
-                                    f"SF увеличен на {str(reward_sf[level])}, мана увеличина на {str(mana_all[level])}")
+                                    f"Скорость фарма увеличена на {reward_sf[level]}, мана увеличина на {mana_all[level]}")
         db_l = sq.connect("table level")
         cur_l = db_l.cursor()
         cur_l.execute(f"""UPDATE level SET ex_level = '{level_to_xp[level]}' WHERE user_id = '{user_id}'""")
@@ -731,26 +731,17 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 
 def update():
     time_now = time.strftime("%X")
-    x = 0
+    count = 0
     db_table_farm = sq.connect("table farm")
     cur_table_farm = db_table_farm.cursor()
     for i in cur_table_farm.execute("""SELECT user_id FROM user_farm"""):
-        count_id = len(i)
-        user_id = i
-        print(user_id[0])
-    if count_id > 1:
-        for i in range(count_id+1):
-            for i in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{user_id[x][0]}'"""):
-                mana_all = i[0]
-                cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_all} WHERE '{user_id[x][0]}'""")
-                x += 1
-    else:
-        for i in range(count_id+1):
-            for i in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{user_id[0]}'"""):
-                mana_all = i[0]
-                cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_all} WHERE '{user_id[0]}'""")
-                db_table_farm.commit()
-                x += 1
+        print(i)
+    for n in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{i[count]}'"""):
+        mana_all = n[0]
+        print(mana_all)
+        cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_all} WHERE user_id = '{i[count]}'""")
+        db_table_farm.commit()
+        count += 1
     prov_farm()
 
 
@@ -758,5 +749,5 @@ def update():
 """___________________________________________________________________"""
 
 if __name__ == "__main__":
-    RepeatTimer(20, update).start()
+    RepeatTimer(10, update).start()
     executor.start_polling(dp, on_startup=on_start_up, skip_updates=True)
