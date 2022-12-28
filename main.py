@@ -9,12 +9,19 @@ from slovari import *
 import time
 from datetime import datetime, timedelta
 
-if time.strftime("%X") >= '07:00:00' and time.strftime('%X') <= '10:00:00':
-    welcome = welcome_morning
-elif time.strftime("%X") >= '10:00:00' and time.strftime('%X') <= '17:00:00':
-    welcome = welcome_day
-elif time.strftime("%X") >= '17:00:00':
-    welcome = welcome_dinner
+async def time_add():
+    global welcome
+    if time.strftime("%X") >= '07:00:00' and time.strftime('%X') <= '10:00:00':
+        welcome = welcome_morning
+    elif time.strftime("%X") >= '10:00:00' and time.strftime('%X') <= '17:00:00':
+        welcome = welcome_day
+    elif time.strftime("%X") >= '17:00:00':
+        welcome = welcome_dinner
+    else:
+        welcome = welcome_night
+
+
+
 """_____________________________Создание бд и ее функций__________________________"""
 
 
@@ -121,6 +128,12 @@ async def db_farm(user_id):
         db_table_farm.commit()
         for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
             print(i)
+
+def prov_farm():
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
+    for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
+        print(i)
 
 
 """_____________________________Создание бд и ее функций__________________________"""
@@ -419,6 +432,7 @@ async def on_start_up(_):
 
 @dp.message_handler(commands=["start"])
 async def start_message(message: types.Message):
+    await time_add()
     await bot.send_message(chat_id=message.from_user.id,
                            text=welcome,
                            parse_mode="HTML",
@@ -715,7 +729,34 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
                                parse_mode="HTML")
 
 
+def update():
+    time_now = time.strftime("%X")
+    x = 0
+    db_table_farm = sq.connect("table farm")
+    cur_table_farm = db_table_farm.cursor()
+    for i in cur_table_farm.execute("""SELECT user_id FROM user_farm"""):
+        count_id = len(i)
+        user_id = i
+        print(user_id[0])
+    if count_id > 1:
+        for i in range(count_id+1):
+            for i in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{user_id[x][0]}'"""):
+                mana_all = i[0]
+                cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_all} WHERE '{user_id[x][0]}'""")
+                x += 1
+    else:
+        for i in range(count_id+1):
+            for i in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{user_id[0]}'"""):
+                mana_all = i[0]
+                cur_table_farm.execute(f"""UPDATE user_farm SET mana = {mana_all} WHERE '{user_id[0]}'""")
+                db_table_farm.commit()
+                x += 1
+    prov_farm()
+
+
+
 """___________________________________________________________________"""
 
 if __name__ == "__main__":
+    RepeatTimer(20, update).start()
     executor.start_polling(dp, on_startup=on_start_up, skip_updates=True)
