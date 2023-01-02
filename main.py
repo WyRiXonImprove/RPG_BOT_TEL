@@ -35,8 +35,7 @@ async def count_db(user_id):
         user_info = (user_id, 0)
         cur_count.execute("""INSERT INTO count VALUES(?, ?)""", user_info)
         db_count.commit()
-        for i in cur_count.execute("""SELECT * FROM count"""):
-            print(i)
+
 
 
 
@@ -59,11 +58,10 @@ async def new_db(user_id):
     cur = db.cursor()
     cur.execute(f"""SELECT user_id FROM user_db WHERE user_id = '{user_id}'""")
     if cur.fetchone() is None:
-        user_info = (user_id, "", "", 1, 0)
+        user_info = (user_id, " ", " ", 1, 0)
         cur.execute("""INSERT INTO user_db VALUES(?, ?, ?, ?, ?)""", user_info)
         db.commit()
-        for i in cur.execute("""SELECT * FROM user_db"""):
-            print(i)
+
 
 
 # функция проверки бд
@@ -144,8 +142,7 @@ async def db_farm(user_id):
         user_info = (user_id, 100, 300, 60, 300)
         cur_table_farm.execute("""INSERT INTO user_farm VALUES(?, ?, ?, ?, ?)""", user_info)
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
+
 
 def prov_farm():
     db_table_farm = sq.connect("table farm")
@@ -174,14 +171,17 @@ async def db_lev(user_id):
         user_info = (user_id, 5, 0)
         cur_l.execute("""INSERT INTO level VALUES(?, ?, ?)""", user_info)
         db_l.commit()
-        for i in cur_l.execute("""SELECT * FROM level"""):
-            print(i)
+
 
 
 
 #add xp in table level
-async def xp_add(user_id, level):
+async def xp_add(user_id):
     global XP, XP_level, a
+    db = sq.connect("new db1")
+    cur = db.cursor()
+    for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{user_id}'"""):
+        level = i[0]
     db_l = sq.connect("table level")
     cur_l = db_l.cursor()
     for i in cur_l.execute(f"""SELECT ex_level FROM level WHERE user_id = '{user_id}'"""):
@@ -197,23 +197,35 @@ async def xp_add(user_id, level):
     if check_class == "white_elf":
         a = random.randint(1, 20)
         if a == 4:
-            XP += level_xp[level] * 2
+            XP_add = level_xp[level]*2
+            XP_add = round(XP_add, 1)
+            XP += XP_add
             XP = round(XP, 1)
+            await bot.send_message(chat_id=user_id, text="Вам выпало 2х ХР")
         else:
-            XP += level_xp[level]
+            XP_add = level_xp[level]
+            XP += XP_add
             XP = round(XP, 1)
     elif check_class == 'knights':
         b = random.randint(1, 10)
         if b == 4:
-            XP += level_xp[level] * 1.5
+            XP_add = level_xp[level]*1.5
+            XP_add = round(XP_add, 1)
+            XP += XP_add
             XP = round(XP, 1)
+            await bot.send_message(chat_id=user_id, text="Вам выпало 1.5х ХР")
         else:
+            XP_add = level_xp[level]
             XP += level_xp[level]
             XP = round(XP, 1)
     else:
+        XP_add = level_xp[level]
         XP += level_xp[level]
         XP = round(XP, 1)
     cur_l.execute(f"""UPDATE level SET ex = {XP} WHERE user_id = '{user_id}'""")
+    await bot.send_message(chat_id=user_id,
+                           text=XP_ADD.format(XP_add, XP, XP_level),
+                           parse_mode="HTML")
     db_l.commit()
 
 
@@ -283,6 +295,7 @@ async def up_level(user_id):
 
 """_______________________________________GOLD system______________________________"""
 async def gold_add_user(user_id):
+    global class_user, level, gold
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT gold FROM user_db WHERE user_id = '{user_id}'"""):
@@ -292,96 +305,51 @@ async def gold_add_user(user_id):
     if level == 1:
         gold_add = random.randint(5, 10)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 2:
         gold_add = random.randint(11, 18)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 3:
         gold_add = random.randint(19, 30)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 4:
         gold_add = random.randint(31, 45)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 5:
         gold_add = random.randint(46, 62)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 6:
         gold_add = random.randint(63, 80)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 7:
         gold_add = random.randint(81, 100)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 8:
         gold_add = random.randint(101, 124)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     elif level == 9:
         gold_add = random.randint(125, 150)
         gold += gold_add
-        cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
     else:
         gold_add = random.randint(151, 181)
         gold += gold_add
         cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
-        db.commit()
-        db.close()
-        await bot.send_message(chat_id=user_id,
-                               text=GOLD_ADD.format(gold_add),
-                               parse_mode="HTML")
+    for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = {user_id}"""):
+        class_user = i[0]
+    if random.randint(1, 10) == 5:
+        if class_user == "dark_elf":
+            gold *= 2
+            await bot.send_message(chat_id=user_id,
+                                   text="Вам выпало 2х золото!")
+    cur.execute(f"""UPDATE user_db Set gold = {gold} WHERE user_id = '{user_id}'""")
+    db.commit()
+    db.close()
+    await bot.send_message(chat_id=user_id,
+                           text=GOLD_ADD.format(gold_add),
+                           parse_mode="HTML")
 
 """_________________________________Профиль_________________________________________"""
-async def select_profile(user_id):
+async def select_profile(user_id, chat_id):
+    global class_user, weapon, level, gold
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = {user_id}"""):
@@ -405,7 +373,7 @@ async def select_profile(user_id):
     for i in cur.execute(f"""SELECT gold FROM user_db WHERE user_id = {user_id}"""):
         gold = i[0]
     db.close()
-    await bot.send_message(chat_id=user_id,
+    await bot.send_message(chat_id=chat_id,
                            text=PROFILE.format(class_user, weapon, level, gold),
                            parse_mode="HTML")
 
@@ -480,13 +448,13 @@ async def game_start(message: types.Message):
 
 @dp.message_handler(commands=["profile"])
 async def profile(message: types.Message):
-    await select_profile(user_id=message.chat.id)
+    await select_profile(user_id=message.from_user.id, chat_id=message.chat.id)
     await message.delete()
 
 
 @dp.message_handler(commands=["farm"])
 async def farm_start(message: types.Message):
-    global  time_o, mana_now
+    global  time_o, mana_now, level
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT level_user FROM user_db WHERE user_id = '{message.from_user.id}'"""):
@@ -511,7 +479,7 @@ async def farm_start(message: types.Message):
             count_farm = i[0]
         if count_farm == 1:
             await bot.send_message(chat_id=message.from_user.id,
-                                   text = '<b>Сначала закончите предыдущий фарм</b>',
+                                   text='<b>Сначала закончите предыдущий фарм</b>',
                                    parse_mode='HTML')
             return
         upload_message = await bot.send_message(chat_id=message.chat.id,
@@ -527,21 +495,20 @@ async def farm_start(message: types.Message):
             d.append(sym * 1)
             x += 10
             await upload_message.edit_text(text=''.join(d) + f"{i * 10 + 10}%")
-            await asyncio.sleep(0.1)
-        await asyncio.sleep(0.5)
+            await asyncio.sleep(time_farm/10)  # time_farm / 10)
         await upload_message.delete()
-        await xp_add(user_id=message.from_user.id, level=level)
-        await bot.send_message(chat_id=message.from_user.id,
-                               text=XP_ADD.format(level_xp[level], XP, XP_level),
-                               parse_mode="HTML")
-        time_o = 0
-        await up_level(user_id=message.from_user.id)
+        await xp_add(user_id=message.from_user.id)
+        await mana_update(level=level, user_id=message.from_user.id)
+        await up_level(user_id=message.chat.id)
+        await gold_add_user(user_id=message.chat.id)
+        time_o = datetime.now()
+        prov()
     else:
         await bot.send_message(chat_id=message.from_user.id,
                                text="Маны не осталось! Она обновляется в 7 часов утра по МСК!")
-        prov()
-    cur_count.execute(f"""UPDATE count SET count_time = {1}  WHERE user_id = '{message.from_user.id}'""")
+    cur_count.execute(f"""UPDATE count SET count_time = {0}  WHERE user_id = '{message.from_user.id}'""")
     db_count.commit()
+    db_count.close()
 
 
 # TODO Доработка значений класса = добавить - !!сделано!!
@@ -557,12 +524,13 @@ async def farm_start(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data == 'white_elf')
 async def add_class_for_user(callback_query: types.CallbackQuery):
+    global check_class
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
     db.close()
-    if check_class == "":
+    if check_class == " ":
         await update_class_white_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=vibor_weapon.format("Светлых эльфов"),
@@ -576,13 +544,13 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET speed_farm = {speed_farm + 40} WHERE user_id = '{callback_query.from_user.id}'""")
         for i in cur_table_farm.execute(
-                f"""SELECT mana FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
-            mana = i[0]
+                f"""SELECT mana_all FROM user_farm WHERE user_id = '{callback_query.from_user.id}'"""):
+            mana_all = i[0]
         cur_table_farm.execute(
-            f"""UPDATE mana SET mana = {mana + 5}  WHERE user_id = '{callback_query.from_user.id}'""")
+            f"""UPDATE user_farm SET mana = {mana_all + 5}  WHERE user_id = '{callback_query.from_user.id}'""")
+        cur_table_farm.execute(
+            f"""UPDATE user_farm SET mana_all = {mana_all + 5}  WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<em><b>Вы уже выбрали класс!</b> Начинайте играть</em>",
@@ -591,12 +559,13 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == 'dark_elf')
 async def add_class_for_user(callback_query: types.CallbackQuery):
+    global check_class
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
     db.close()
-    if check_class == "":
+    if check_class == " ":
         await update_class_dark_elf(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=vibor_weapon.format("Темных эльфов'"),
@@ -617,8 +586,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 10} WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<em><b>Вы уже выбрали класс!</b> Начинайте играть</em>",
@@ -627,12 +594,13 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data == 'knights')
 async def add_class_for_user(callback_query: types.CallbackQuery):
+    global check_class
     db = sq.connect("new db1")
     cur = db.cursor()
     for i in cur.execute(f"""SELECT class FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_class = i[0]
-    if check_class == "":
-        db.close()
+    db.close()
+    if check_class == " ":
         await update_class_knights(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=vibor_weapon.format("Рыцарей"),
@@ -653,8 +621,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 15} WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<em><b>Вы уже выбрали класс!</b> Начинайте играть</em>",
@@ -674,7 +640,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT weapon FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_weapon = i[0]
-    if check_weapon == "":
+    if check_weapon == " ":
         await update_weapon_sword(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=start_farm.format("Меч"),
@@ -687,8 +653,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET speed_farm = {speed_farm + 10} WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -701,7 +665,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT weapon FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_weapon = i[0]
-    if check_weapon == "":
+    if check_weapon == " ":
         await update_weapon_bow(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=start_farm.format("Лук"),
@@ -721,8 +685,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm - 5} WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -735,7 +697,7 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
     cur = db.cursor()
     for i in cur.execute(f"""SELECT weapon FROM user_db WHERE user_id = '{callback_query.from_user.id}'"""):
         check_weapon = i[0]
-    if check_weapon == "":
+    if check_weapon == " ":
         await update_weapon_skipetr(user_id=callback_query.from_user.id)
         await bot.send_message(callback_query.from_user.id,
                                text=start_farm.format("Магический Скипетр"),
@@ -750,8 +712,6 @@ async def add_class_for_user(callback_query: types.CallbackQuery):
         cur_table_farm.execute(
             f"""UPDATE user_farm SET mana = {mana_farm + 30} WHERE user_id = '{callback_query.from_user.id}'""")
         db_table_farm.commit()
-        for i in cur_table_farm.execute("""SELECT * FROM user_farm"""):
-            print(i)
     else:
         await bot.send_message(callback_query.from_user.id,
                                text="<b>Вы уже брали оружие!</b>",
@@ -769,17 +729,20 @@ def update():
         for i in cur_table_farm.execute("""SELECT user_id FROM user_farm"""):
             count_i += 1
             id_user.append(i[0])
-            print(count_i, count)
         while count_i != count:
             for n in cur_table_farm.execute(f"""SELECT mana_all FROM user_farm WHERE user_id = '{id_user[count]}'"""):
                 cur_table_farm.execute(f"""UPDATE user_farm SET mana = {n[0]} WHERE user_id = '{id_user[count]}'""")
                 db_table_farm.commit()
                 count += 1
-                print(count, count_i)
 
         prov_farm()
+        print("Мана обновлена!")
 
-
+db_count = sq.connect("count bd")
+cur_count = db_count.cursor()
+cur_count.execute(f"""UPDATE count SET count_time = {0}""")
+db_count.commit()
+db_count.close()
 """___________________________________________________________________"""
 
 if __name__ == "__main__":
